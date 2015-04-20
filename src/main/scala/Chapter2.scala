@@ -3,7 +3,7 @@ object Chapter2 {
 	def fib( n: Int ) : Int = {
 		def go( n: Int, x: Int, y: Int) : Int = {
 			if( n == 0 ) 0
-			if( n == 1 ) x
+			else if( n == 1 ) x
 			else go( n-1, y, x+y )
 		}
 
