@@ -38,7 +38,11 @@ class TestChapter10 extends FlatSpec with Matchers {
     val zero = (a: Int) => a
   }
 
-  // Exercise 10.1
+  def foldMap[A, B](as: List[A], m: Monoid[B])(f: A => B): B = {
+      as.foldLeft(m.zero)((a, e) => m.op(a, f(e)))
+  }
+
+  // 연습문제 10.1
   it should "test Monoid" in {
     intAddition.op(1, intAddition.op(2, 3)) should
       be (intAddition.op(intAddition.op(1, 2), 3))
@@ -65,7 +69,7 @@ class TestChapter10 extends FlatSpec with Matchers {
       be (booleanAnd.op(true, booleanAnd.zero))
   }
 
-  // Exercise 10.2
+  // 연습문제 10.2
   it should "option Monoid" in {
 
     val monoid = optionMonoid
@@ -76,7 +80,7 @@ class TestChapter10 extends FlatSpec with Matchers {
       be (monoid.op(Some(1), monoid.zero))
   }
 
-  // Exercise 10.3
+  // 연습문제 10.3
   it should "endo Monoid" in {
 
     val monoid = endoMonoid
@@ -88,6 +92,16 @@ class TestChapter10 extends FlatSpec with Matchers {
       be (monoid.op(f1, monoid.op(f2, f3))(10))
     monoid.op(monoid.zero, f1)(10) should
       be (monoid.op(f1, monoid.zero)(10))
+  }
+
+  // 연습문제 10.5
+  it should "foldMap" in {
+    val m = new Monoid[String] {
+      def op(a1: String, a2: String) = a1 + a2
+      val zero: String = ""
+    }
+
+      foldMap(List(1,2,3,4), m)(_.toString) should be ("1234")
   }
 
 }
