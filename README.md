@@ -1,3 +1,4 @@
+[![Codacy Badge](https://api.codacy.com/project/badge/grade/6a6876bd479c4df296dbdd0323765b00)](https://www.codacy.com/app/sht21c/fp_in_scala)
 # 개요
   - 함수형 프로그래밍 스터디 (연습문제 및 테스트)
 
