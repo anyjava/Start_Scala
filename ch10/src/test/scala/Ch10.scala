@@ -37,19 +37,18 @@ class TestChapter10 extends FlatSpec with Matchers {
     val zero = None
   }
 
-  val endoMonoid = new Monoid[Int => Int] {
-    def op(a1: Int => Int, a2: Int => Int) = a1 compose a2
-    val zero = (a: Int) => a
+  def endoMonoid[A] = new Monoid[A => A] {
+    def op(a1: A => A, a2: A => A) = a1 compose a2
+    val zero = (a: A) => a
   }
 
   def foldMap[A, B](as: List[A], m: Monoid[B])(f: A => B): B = {
     as.foldLeft(m.zero)((a, e) => m.op(a, f(e)))
   }
 
-  /*
-  def foldLeft[A](as: List[A], z: A)(f: A => B) = {
+  def foldLeft2[A, B](as: List[A], z: B)(f: (B, A) => B): B = {
+    foldMap(as, endoMonoid[B])(a => b => f(b, a))(z)
   }
-  */
 
   def foldMapV[A, B](v: IndexedSeq[A], m: Monoid[B])(f: A => B): B = {
     if (v.length == 1)
@@ -61,6 +60,7 @@ class TestChapter10 extends FlatSpec with Matchers {
   }
 
   def isSorted[A](v: IndexedSeq[A])(f: (A, A) => Boolean): Boolean = {
+
     val m = new Monoid[A => Boolean] {
       def op(a1: A => Boolean, a2: A => Boolean): A => Boolean =
         x => a1(x) && a2(x)
@@ -69,8 +69,9 @@ class TestChapter10 extends FlatSpec with Matchers {
     foldMapV(v.drop(1), m)(a => x => f(x, a))(v(0))
   }
 
+
   // 연습문제 10.1
-  it should "test Monoid" in {
+  it should "10.1 test Monoid" in {
     intAddition.op(1, intAddition.op(2, 3)) should
       be (intAddition.op(intAddition.op(1, 2), 3))
     intAddition.op(intAddition.zero, 1) should
@@ -97,7 +98,7 @@ class TestChapter10 extends FlatSpec with Matchers {
   }
 
   // 연습문제 10.2
-  it should "option Monoid" in {
+  it should "10.2 option Monoid" in {
 
     val monoid = optionMonoid
 
@@ -108,9 +109,9 @@ class TestChapter10 extends FlatSpec with Matchers {
   }
 
   // 연습문제 10.3
-  it should "endo Monoid" in {
+  it should "10.3 endo Monoid" in {
 
-    val monoid = endoMonoid
+    val monoid = endoMonoid[Int]
     def f1 = (a: Int) => a * 10
     def f2 = (a: Int) => a + 10
     def f3 = (a: Int) => a * 20 + 2
@@ -122,7 +123,7 @@ class TestChapter10 extends FlatSpec with Matchers {
   }
 
   // 연습문제 10.5
-  it should "foldMap" in {
+  it should "10.5 foldMap" in {
     val m = new Monoid[String] {
       def op(a1: String, a2: String) = a1 + a2
       val zero: String = ""
@@ -131,13 +132,13 @@ class TestChapter10 extends FlatSpec with Matchers {
       foldMap(List(1,2,3,4), m)(_.toString) should be ("1234")
   }
 
-  // 연습문제 10.5
-  it should "foldLeft & foldRight using foldMap" in {
-//      foldLeft(List(1, 2, 3, 4), 0)((a, e) => a + e) should be (10)
+  // 연습문제 10.6
+  it should "10.6 foldLeft & foldRight using foldMap" in {
+    foldLeft2(List(1, 2, 3, 4), 0)((a, e) => a + e) should be (10)
   }
 
   // 연습문제 10.7
-  it should "foldMapV" in {
+  it should "10.7 foldMapV" in {
     val m = new Monoid[String] {
       def op(a1: String, a2: String) = a1 + a2
       val zero: String = ""
@@ -148,7 +149,7 @@ class TestChapter10 extends FlatSpec with Matchers {
   }
 
   // 연습문제 10.9
-  //it should "is sorting IndexedSeq" in {
+  //it should "10.9 is sorting IndexedSeq" in {
   //  isSorted(IndexedSeq(1, 2, 3, 4))(_ <= _) should be (true)
   //  isSorted(IndexedSeq(2, 1, 3, 4))(_ <= _) should be (false)
   //  isSorted(IndexedSeq(1, 3, 2, 4))(_ <= _) should be (false)
@@ -168,7 +169,7 @@ class TestChapter10 extends FlatSpec with Matchers {
   }
 
   // 연습문제 10.10
-  it should "wcMonoid" in {
+  it should "10.10 wcMonoid" in {
     val part1 = Part("lorem", 1, "do")
     val part2 = Part("lor", 2, "")
     val part3 = Part("", 2, "dfdf")
@@ -179,7 +180,7 @@ class TestChapter10 extends FlatSpec with Matchers {
   }
 
   // 연습문제 10.11
-  it should "counts words" in {
+  it should "10.11 counts words" in {
     def countWords(text: String) = {
       val half = text.length / 2
       val stubs = List(Stub(text.take(half)), Stub(text.drop(half)))
@@ -212,6 +213,7 @@ class TestChapter10 extends FlatSpec with Matchers {
     countWords(" 12  34 ") should be (2)
     countWords("") should be (0)
     countWords(" ") should be (0)
+    countWords("1271309847213908471290384712093487123049812734092$") should be (1)
   }
 }
 
