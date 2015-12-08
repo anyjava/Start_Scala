@@ -215,5 +215,83 @@ class TestChapter10 extends FlatSpec with Matchers {
     countWords(" ") should be (0)
     countWords("1271309847213908471290384712093487123049812734092$") should be (1)
   }
+
+
+
+
+  def productMonoid[A, B](a: Monoid[A], b: Monoid[B]): Monoid[(A, B)] = {
+    new Monoid[(A, B)] {
+      def op(x: (A, B), y: (A, B)): (A, B) = (a.op(x._1, y._1), b.op(x._2, y._2))
+      def zero: (A, B) = (a.zero, b.zero)
+    }
+  }
+
+  // 연습문제 10.16
+  it should "10.16 productMonoid" in {
+
+    val m1 = new Monoid[Int] {
+      def op(a1: Int, a2: Int) = a1 + a2
+      val zero = 0
+    }
+    val m2 = new Monoid[Int] {
+      def op(a1: Int, a2: Int) = a1 * a2
+      val zero = 1
+    }
+
+    val m3 = productMonoid(m1, m2)
+
+    m3.op(m3.op((1, 2), (3, 4)), (5, 6)) should be (m3.op((1, 2), m3.op((3, 4), (5, 6))))
+  }
+
+  def mapMergeMonoid[K, V](V: Monoid[V]): Monoid[Map[K, V]] =
+    new Monoid[Map[K, V]] {
+      def zero = Map[K, V]()
+      def op(a: Map[K, V], b: Map[K, V]) =
+        (a.keySet ++ b.keySet).foldLeft(zero) { (acc, k) =>
+          acc.updated(k, V.op(a.getOrElse(k, V.zero),
+                              b.getOrElse(k, V.zero)))
+        }
+    }
+
+  it should "merge two maps" in {
+    val map1 = Map("a" -> 1, "b" -> 2)
+    val map2 = Map("b" -> 3, "c" -> 4)
+
+    val m = mapMergeMonoid[String, Int](intAddition)
+    m.op(map1, map2) should be (Map("a" -> 1, "b" -> 5, "c" -> 4))
+  }
+
+  it should "merge nested maps" in {
+    val map1 = Map("o1" -> Map("i1" -> 1, "i2" -> 2))
+    val map2 = Map("o1" -> Map("i2" -> 3))
+
+    val M: Monoid[Map[String, Map[String, Int]]] =
+      mapMergeMonoid(mapMergeMonoid(intAddition))
+
+    M.op(map1, map2) should be (Map("o1" -> Map("i1" -> 1, "i2" -> 5)))
+  }
+
+  def functionMonoid[A,B](B: Monoid[B]): Monoid[A=>B] = new Monoid[A=>B] {
+    def op(f1: A => B, f2: A => B): A => B = (a: A) => B.op(f1(a), f2(a))
+    def zero: A => B = (a: A) => B.zero
+  }
+
+  // 연습문제 10.17
+  it should "create a monoid for function" in {
+    val m: Monoid[String => Int] = functionMonoid[String, Int](intAddition)
+    def f1(x: String) = x.toInt * 2
+    def f2(x: String) = x.toInt * 3
+    m.op(f1, f2)("10") should be (50)
+  }
+
+  def bag[A](as: IndexedSeq[A]): Map[A, Int] = {
+    val m = mapMergeMonoid[A, Int](intAddition)
+    foldMapV(as, m)(a => Map(a -> 1))
+  }
+
+  // 연습문제 10.18
+  it should "count elements" in {
+    bag(Vector("a", "rose", "is", "a", "rose")) should be (Map("a" -> 2, "rose" -> 2, "is" -> 1))
+  }
 }
 
